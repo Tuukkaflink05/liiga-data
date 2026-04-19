@@ -26,7 +26,7 @@ def TimeandGoals():
 
     df = pd.read_json(file)
 
-    df = df[df['goals'] > 0]
+    df = df[df['goalkeeper'] == False]
 
     t = df['timeOnIce'].to_numpy()
     g = df['goals'].to_numpy()
