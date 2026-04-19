@@ -11,7 +11,7 @@ def GetData():
 
     Baseurl = 'https://liiga.fi/api/v2/'
     headers = {'user-agent': 'Mozilla/5.0'}
-    path = 'players/stats/summed/2025/2025/runkosarja/true'
+    path = 'players/stats/summed/2020/2025/runkosarja/true'
 
     r = requests.get(Baseurl + path, headers=headers)
 
