@@ -22,3 +22,18 @@ def GetData():
     with open(file, 'w') as f:
         json.dump(jsondata, f, indent=2)
 
+def TimeandGoals():
+
+    df = pd.read_json(file)
+
+    df = df[df['goals'] > 0]
+
+    t = df['timeOnIce'].to_numpy()
+    g = df['goals'].to_numpy()
+
+    plt.scatter(t, g)
+    m,b = np.polyfit(t,g,1)
+    plt.plot(t,m*g +b)
+    plt.show()
+
+TimeandGoals()
