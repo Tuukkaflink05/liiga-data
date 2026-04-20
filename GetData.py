@@ -8,8 +8,8 @@ import time
 
 
 file = 'players.json'
-gamesFile = 'games.json'
-shotFile = 'shots.json'
+gamesFile = 'runkosarjagames.json'
+shotFile = 'runkosarjashots.json'
 
 Baseurl = 'https://liiga.fi/api/v2/'
 headers = {'user-agent': 'Mozilla/5.0'}
@@ -31,7 +31,7 @@ def GetPlayerData():
 ##runkosarja + playoffs
 
 def GetGamesData():
-    match = ['playoffs']
+    match = ['runkosarja']
 
     #save all of the data first before adding to a file
     allData = []
@@ -48,6 +48,8 @@ def GetGamesData():
 
     with open(gamesFile, 'w') as f:
         json.dump(allData, f, indent=2)
+
+
 
 
 def GetShotData():
@@ -70,10 +72,11 @@ def GetShotData():
         alldata.extend(jsondata)
 
         wait_time = random.uniform(2.0, 4.0)
-        print(f'waiting for: {wait_time}')
 
         time.sleep(wait_time)
 
 
     with open(shotFile, 'w') as f:
         json.dump(alldata, f, indent=2)
+
+GetShotData()
