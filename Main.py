@@ -1,95 +1,53 @@
-import requests
 import pandas as pd
-import json
-import matplotlib as mpl
 from matplotlib import pyplot as plt
 import numpy as np
-from tqdm import tqdm
-import random
-import time
-import statistics as st
+import seaborn as sns
+
 
 file = 'players.json'
 gamesFile = 'games.json'
 shotFile = 'shots.json'
 
-Baseurl = 'https://liiga.fi/api/v2/'
-headers = {'user-agent': 'Mozilla/5.0'}
 
-def GetPlayerData():
+#6138 shots
+#5819 did not go in
+#319 goals
 
-    path = 'players/stats/summed/2020/2025/runkosarja/true'
+# over the 2025 season playoffs
+#65 games
 
-    r = requests.get(Baseurl + path, headers=headers)
+# 5% of shot are a goal on average
 
-    print(r.url)
+# 94 shots a match on average
 
-    jsondata = r.json()
-
-    with open(file, 'w') as f:
-        json.dump(jsondata, f, indent=2)
-
-##runkosarja + playoffs
-
-def GetGamesData():
-    match = ['playoffs']
-
-    #save all of the data first before adding to a file
-    allData = []
-
-    for i in range(len(match)):
-        path = f'games?tournament={match[i]}&season=2025'
-        r = requests.get(Baseurl + path, headers=headers)
-        print(r.url)
-
-        jsondata = r.json()
-
-        allData.extend(jsondata)
+#5 goals a match on averag
 
 
-    with open(gamesFile, 'w') as f:
-        json.dump(allData, f, indent=2)
-
-
-def GetShotData():
-
-    df = pd.read_json(gamesFile)
-
-    idlist = []
-
-    idlist = df['id'].to_list()
-
-    alldata = []
-
-    for i in tqdm(range(len(idlist)))   :
-        path = f'shotmap/2025/{idlist[i]}'
-
-        print(f"fetching shotdata for game: {idlist[i]}")
-
-        r = requests.get(Baseurl + path, headers=headers)
-        jsondata = r.json()
-        alldata.extend(jsondata)
-
-        wait_time = random.uniform(2.0, 4.0)
-        print(f'waiting for: {wait_time}')
-
-        time.sleep(wait_time)
-
-
-    with open(shotFile, 'w') as f:
-        json.dump(alldata, f, indent=2)
-
-def Shotsandok():
+def ShotsOnRink():
     df = pd.read_json(shotFile)
+
+
+
+    plt.figure(figsize=(5,5))
+    plt.axis('off')
 
     ##look at misses
     misses = ['GOALIE_BLOCKED', 'PLAYER_BLOCKED', 'MISSED']
 
     missedShots = df[(df['eventType'].isin(misses))]
 
+
+
     x = missedShots['shotX'].to_numpy()
+    ##mirror the shots to one side
+    x = np.where(x > 500, 1000 - x, x)
+
+
     y = missedShots['shotY'].to_numpy()
-    plt.scatter(x,y, s=0.5, c='red', alpha=0.5)
+    y = np.where(x > 500, 500 - y, y)
+
+
+    plt.scatter(x,y, s=0.5, c='red', alpha=0.3)
 
 
     #look at goals
@@ -97,7 +55,15 @@ def Shotsandok():
 
     x = madeShots['shotX'].to_numpy()
     y = madeShots['shotY'].to_numpy()
-    plt.scatter(x,y, s=5, c='green')
+
+    x = np.where(x > 500, 1000 - x, x)
+    y = np.where(x > 500, 500 - y, y)
+
+
+    plt.scatter(x,y, s=0.5, c='green', alpha=1)
+
+    rinkImg = plt.imread('Rink-half.png')
+    plt.imshow(rinkImg, extent=[0,500,0,500])
 
     plt.show()
 
@@ -106,9 +72,7 @@ def Shotsandok():
 
 
 
-
-Shotsandok()
-
+##does time on ice increase goals
 def TimeandGoals():
 
     forward_roles = ['VL', 'OL', 'KH', 'H']
