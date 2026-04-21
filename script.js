@@ -54,7 +54,7 @@ async function loadData() {
                 sizex: 1,
                 sizey: 1,
                 sizing: 'fill',
-                
+
 
             }
         ],
@@ -74,3 +74,13 @@ async function loadData() {
 
 loadData();
 
+
+//https://plotly.com/javascript/
+/*
+https://plotly.com/javascript/reference/
+
+https://plotly.com/javascript/reference/layout/images/
+
+https://plotly.com/javascript/images/
+
+https://danfo.jsdata.org/  */
