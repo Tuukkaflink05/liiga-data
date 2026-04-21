@@ -12,10 +12,10 @@ class files:
 
     matches = ['runkosarja', 'playoffs']
 
-    playersFile = f'players-{startSeason}-{endSeason}.json'
-    gamesFile = f'runkosarjagames{startSeason}-{endSeason}.json'
-    runkosarjashotFile = f'{matches[0]}shots{startSeason}-{endSeason}.json'
-    playoffsshotfile = f'{matches[1]}shots{startSeason}-{endSeason}.json'
+    playersFile = f'json/players-{startSeason}-{endSeason}.json'
+    gamesFile = f'json/runkosarjagames{startSeason}-{endSeason}.json'
+    runkosarjashotFile = f'json/{matches[0]}shots{startSeason}-{endSeason}.json'
+    playoffsshotfile = f'json/{matches[1]}shots{startSeason}-{endSeason}.json'
 
 
 
@@ -84,7 +84,7 @@ def ShotsOnRink():
 
     plt.scatter(x,y, s=0.5, c='green', alpha=1)
 
-    rinkImg = plt.imread('Rink-half.png')
+    rinkImg = plt.imread('pic/Rink-half.png')
     plt.imshow(rinkImg, extent=[0,500,0,500])
 
     plt.show()
