@@ -4,40 +4,40 @@ import json
 from tqdm import tqdm
 import random
 import time
+from Main import files
 
-
-
-file = 'players.json'
-gamesFile = 'runkosarjagames.json'
-shotFile = 'runkosarjashots.json'
 
 Baseurl = 'https://liiga.fi/api/v2/'
 headers = {'user-agent': 'Mozilla/5.0'}
 
 
 def GetPlayerData():
+    allData = []
 
-    path = 'players/stats/summed/2020/2025/runkosarja/true'
+    for i in range(len(files.matches)):
 
-    r = requests.get(Baseurl + path, headers=headers)
+        path = f'players/stats/summed/{files.startSeason}/{files.endSeason}/{files.matches[i]}/true'
 
-    print(r.url)
+        r = requests.get(Baseurl + path, headers=headers)
 
-    jsondata = r.json()
+        print(r.url)
 
-    with open(file, 'w') as f:
-        json.dump(jsondata, f, indent=2)
+        allData.extend(r.json())
 
-##runkosarja + playoffs
+    with open(files.playersFile, 'w') as f:
+        json.dump(allData, f, indent=2)
+
+
+GetPlayerData()
 
 def GetGamesData():
-    match = ['runkosarja']
+
 
     #save all of the data first before adding to a file
     allData = []
 
-    for i in range(len(match)):
-        path = f'games?tournament={match[i]}&season=2025'
+    for i in range(len(files.matches)):
+        path = f'games?tournament={files.matches[i]}&season=2025'
         r = requests.get(Baseurl + path, headers=headers)
         print(r.url)
 
@@ -46,7 +46,7 @@ def GetGamesData():
         allData.extend(jsondata)
 
 
-    with open(gamesFile, 'w') as f:
+    with open(files.gamesFile, 'w') as f:
         json.dump(allData, f, indent=2)
 
 
@@ -54,7 +54,7 @@ def GetGamesData():
 
 def GetShotData():
 
-    df = pd.read_json(gamesFile)
+    df = pd.read_json(files.gamesFile)
 
     idlist = []
 
@@ -76,7 +76,5 @@ def GetShotData():
         time.sleep(wait_time)
 
 
-    with open(shotFile, 'w') as f:
+    with open(files.runkosarjashotFile, 'w') as f:
         json.dump(alldata, f, indent=2)
-
-GetShotData()

@@ -4,9 +4,22 @@ import numpy as np
 import seaborn as sns
 
 
-file = 'players.json'
-gamesFile = 'games.json'
-shotFile = 'shots.json'
+
+
+class files:
+    startSeason = 2025
+    endSeason = 2025
+
+    matches = ['runkosarja', 'playoffs']
+
+    playersFile = f'players-{startSeason}-{endSeason}.json'
+    gamesFile = f'runkosarjagames{startSeason}-{endSeason}.json'
+    runkosarjashotFile = f'{matches[0]}shots{startSeason}-{endSeason}.json'
+    playoffsshotfile = f'{matches[1]}shots{startSeason}-{endSeason}.json'
+
+
+
+
 
 
 #6138 shots
@@ -24,8 +37,17 @@ shotFile = 'shots.json'
 
 
 def ShotsOnRink():
-    df = pd.read_json(shotFile)
+    df = pd.read_json(files.runkosarjashotFile)
 
+    df = pd.concat([df, pd.read_json(files.playoffsshotfile)], ignore_index=True)
+
+
+
+    #only get data from one player
+
+    df = df[(df['shooterId'] == 40056206)]
+
+    print(df)
 
 
     plt.figure(figsize=(5,5))
@@ -68,8 +90,7 @@ def ShotsOnRink():
     plt.show()
 
 
-
-
+ShotsOnRink()
 
 
 ##does time on ice increase goals
@@ -77,7 +98,7 @@ def TimeandGoals():
 
     forward_roles = ['VL', 'OL', 'KH', 'H']
 
-    df = pd.read_json(file)
+    df = pd.read_json(files.playersFile)
 
     df = df[(df['goalkeeper'] == False)]
 
