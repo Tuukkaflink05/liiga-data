@@ -28,7 +28,13 @@ def GetPlayerData():
         json.dump(allData, f, indent=2)
 
 
-GetPlayerData()
+def Removeduplicates():
+    df = pd.read_json(files.playersFile)
+
+    df = df.drop_duplicates(subset=['playerId'])
+
+    df.to_json(files.nodupplayers, orient='records', indent=2)
+
 
 def GetGamesData():
 
@@ -78,3 +84,24 @@ def GetShotData():
 
     with open(files.runkosarjashotFile, 'w') as f:
         json.dump(alldata, f, indent=2)
+
+
+
+def GetTeamData():
+
+
+    path = f'standings/?season={files.endSeason}'
+    r = requests.get(Baseurl + path, headers=headers)
+    print(r.url)
+
+    jsondata = r.json()
+
+    jsondata = jsondata['season']
+
+
+
+    with open(files.teamsFile, 'w') as f:
+        json.dump(jsondata, f, indent=2)
+
+
+GetTeamData()

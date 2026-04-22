@@ -1,31 +1,56 @@
-let dropdown = document.getElementById('players');
+// global variables.
+let playerdropdown = document.getElementById('players');
+playerdropdown.addEventListener("change", playerdataupdated);
 
-let df;
+let teamdropdown = document.getElementById('teams');
+teamdropdown.addEventListener('change', teamDataupdated);
+
+
+let shotdf;
+let playerdf;
 let layout;
 
 async function loadData() {
-    const data = await fetch('./json/playoffsshots2025-2025.json');
-    const rawData = await data.json();
+    const playoffshotdata = await fetch('./json/playoffsshots2025-2025.json');
+    const runkosarjashotdata = await fetch('./json/runkosarjashots2025-2025.json');
+    const playerdata = await fetch('./json/players-nodup-2025-2025.json');
+    const teamdata = await fetch('./json/teams-2025-2025.json')
 
-    df = new dfd.DataFrame(rawData);
+    const rawplayoffdata = await playoffshotdata.json();
+    const rawrunkosarjadata = await runkosarjashotdata.json();
+    const rawplayerdata = await playerdata.json();
+    const rawteamdata = await teamdata.json();
 
-    ids = await df['shooterId'].unique().values;
-
-    SetDropDown(ids);
-
-
-    let madeShots = await df.query(df['eventType'].eq('GOAL'));
+    const combinedrawdata = [...rawplayoffdata, ...rawrunkosarjadata];
 
 
+    shotdf = new dfd.DataFrame(combinedrawdata);
+    playerdf = new dfd.DataFrame(rawplayerdata);
+    teamdf = new dfd.DataFrame(rawteamdata);
 
-    let missedShots = await df.query(df['eventType'].ne('GOAL'));
+    SetTeamsDropdown(teamdf['internalId'].values, teamdf['teamName'].values);
+
+
+
+    console.log(shotdf.shape);
+
+    ids = await shotdf['shooterId'].unique().values;
+
+    SetplayerDropDown(ids);
+
+
+    let madeShots = await shotdf.query(shotdf['eventType'].eq('GOAL'));
+
+
+
+    let missedShots = await shotdf.query(shotdf['eventType'].ne('GOAL'));
 
     let goalPlot = {
         x: madeShots['shotX'].values,
         y: madeShots['shotY'].values,
         mode: 'markers',
         marker: {
-            size: 3,
+            size: 5,
             color: 'green',
         },
         type: 'scatter',
@@ -82,28 +107,52 @@ async function loadData() {
 }
 
 
-function SetDropDown(ids) {
-    ids.forEach(element => {
+async function SetplayerDropDown(ids) {
+
+   for (const element of ids) {
         let playerOption = document.createElement('option');
         playerOption.value = element;
-        playerOption.textContent = element;
-        dropdown.append(playerOption);
-    });
+        let name = await GetPlayerName(element);
+        if (name == null) {
+            continue;
+        }
+        playerOption.textContent = name;
+        playerdropdown.append(playerOption);
+    };
 }
 
-dropdown.addEventListener("change", dataupdated);
+async function SetTeamsDropdown(teamid, teamname) {
 
-async function dataupdated() {
-    console.log(parseInt(dropdown.value))
+    console.log(teamid.length == teamname.length);
+    for (i = 0; i < teamid.length; i++) {
+        let teamOption = document.createElement('option');
+        teamOption.value = teamid[i];
+        teamOption.textContent = teamname[i];
+        teamdropdown.append(teamOption);
+    }
+
+}
+
+async function GetPlayerName(id) {
+    let namedf = playerdf.query(playerdf['playerId'].eq(parseInt(id)));
+    let fName = namedf['firstName'].values;
+    if (fName.length == 0) {
+        return;
+    }
+    let lName = namedf['lastName'].values;
+    return(fName +  ' ' + lName);
+}
 
 
 
+async function playerdataupdated() {
+    console.log('chosen player id:',  playerdropdown.value)
     //playerdf = await df.query(df['shooterId'].eq(parseInt(dropdown.value)));
 
-    let madeShots = df.query(df['eventType'].eq('GOAL').and(df['shooterId'].eq(parseInt(dropdown.value))));
+    let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shooterId'].eq(parseInt(playerdropdown.value))));
 
 
-    let missedShots = df.query(df['eventType'].ne('GOAL').and(df['shooterId'].eq(parseInt(dropdown.value))));
+    let missedShots = shotdf.query(shotdf['eventType'].ne('GOAL').and(shotdf['shooterId'].eq(parseInt(playerdropdown.value))));
 
 
     let goalPlot = {
@@ -134,6 +183,10 @@ async function dataupdated() {
     let plotdata = [goalPlot, missedPlot];
 
     Plotly.react('test', plotdata,layout);
+}
+
+async function teamDataupdated() {
+    console.log('chosen team id: ', teamdropdown.value);
 }
 
 loadData();

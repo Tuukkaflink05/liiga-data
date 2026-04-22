@@ -16,9 +16,8 @@ class files:
     gamesFile = f'json/runkosarjagames{startSeason}-{endSeason}.json'
     runkosarjashotFile = f'json/{matches[0]}shots{startSeason}-{endSeason}.json'
     playoffsshotfile = f'json/{matches[1]}shots{startSeason}-{endSeason}.json'
-
-
-
+    nodupplayers = f'json/players-nodup-{startSeason}-{endSeason}.json'
+    teamsFile = f'json/teams-{startSeason}-{endSeason}.json'
 
 
 
@@ -89,8 +88,6 @@ def ShotsOnRink():
 
     plt.show()
 
-
-ShotsOnRink()
 
 
 ##does time on ice increase goals
