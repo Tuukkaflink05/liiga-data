@@ -50,23 +50,35 @@ async function loadData() {
         y: allgoals['shotY'].values,
         mode: 'markers',
         marker: {
-            size: 5,
+            size: 2,
             color: 'green',
         },
         type: 'scattergl',
+        opacity: 0.6,
         name: 'Goal'
     };
 
 
     let missedPlot = {
-        x: allmisses['shotX'].values,
-        y: allmisses['shotY'].values,
-        mode: 'markers',
-        marker: {
-            size: 2,
-            color: 'red',
+        x: shotdf['shotX'].values,
+        y: shotdf['shotY'].values,
+        type: 'histogram2dcontour',
+        colorscale: [
+            [0, 'rgba(0,0,0,0)'],
+            [0.5, 'rgba(255, 255,0,0.5)'],
+            [1, 'rgba(255,0,0,1)']
+        ],
+        contours: {
+        coloring: 'heatmap', // Fills the rings with solid color
+
+        showlines: false // Hides the topographical borders for a smoother look
         },
-        type: 'scattergl',
+        line: { width: 0 },
+        ncontours: 20, // How smooth the gradient is
+        opacity: 0.6,
+        hoverinfo: 'none',
+        showscale: false,
+
         name: 'Miss'
     };
 
@@ -134,7 +146,9 @@ async function GetPlayerName(id) {
         return;
     }
     let lName = namedf['lastName'].values;
-    return(fName +  ' ' + lName);
+    let num = namedf['jersey'].values;
+    let team = namedf['teamName'].values;
+    return(`${fName} ${lName} #${num} (${team})`);
 }
 
 async function SetTeamsDropdown(teamid, teamname) {
@@ -159,8 +173,8 @@ async function playerdataupdated(shotdf) {
         }
 
         let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
-        let missedShots = shotdf.query(shotdf['eventType'].ne('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
-        UpdateGraph(madeShots, missedShots);
+        let allteamShots = shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
+        UpdateGraph(madeShots, allteamShots);
         return;
     }
 
@@ -169,12 +183,12 @@ async function playerdataupdated(shotdf) {
 
     let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shooterId'].eq(parseInt(playerdropdown.value))));
 
-    let missedShots = shotdf.query(shotdf['eventType'].ne('GOAL').and(shotdf['shooterId'].eq(parseInt(playerdropdown.value))));
+    let allPlayerShots = shotdf.query(shotdf['shooterId'].eq(parseInt(playerdropdown.value)));
 
-    UpdateGraph(madeShots, missedShots);
+    UpdateGraph(madeShots, allPlayerShots);
 }
 
-function UpdateGraph(madeShots, missedShots) {
+function UpdateGraph(madeShots, allShots) {
 
     let goalPlot = {
         x: madeShots['shotX'].values,
@@ -190,16 +204,28 @@ function UpdateGraph(madeShots, missedShots) {
 
 
     let missedPlot = {
-        x: missedShots['shotX'].values,
-        y: missedShots['shotY'].values,
-        mode: 'markers',
-        marker: {
-            size: 2,
-            color: 'red',
+        x: allShots['shotX'].values,
+        y: allShots['shotY'].values,
+        type: 'histogram2dcontour',
+        colorscale: [
+            [0, 'rgba(0,0,0,0)'],
+            [0.5, 'rgba(255, 255,0,0.5)'],
+            [1, 'rgba(255,0,0,1)']
+        ],
+        contours: {
+        coloring: 'heatmap', // Fills the rings with solid color
+
+        showlines: false // Hides the topographical borders for a smoother look
         },
-        type: 'scattergl',
+        line: { width: 0 },
+        ncontours: 20, // How smooth the gradient is
+        opacity: 0.6,
+        hoverinfo: 'none',
+        showscale: false,
+
         name: 'Miss'
     };
+
 
     let plotdata = [goalPlot, missedPlot];
 
@@ -226,10 +252,9 @@ async function teamDataupdated() {
     let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
 
 
-    let missedShots = shotdf.query(shotdf['eventType'].ne('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
+    let allteamShots = shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
 
-
-    UpdateGraph(madeShots, missedShots);
+    UpdateGraph(madeShots, allteamShots);
 
 }
 
