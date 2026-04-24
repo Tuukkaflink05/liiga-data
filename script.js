@@ -1,6 +1,8 @@
 // global variables.
 let playerdropdown = document.getElementById('players');
-playerdropdown.addEventListener("change", playerdataupdated);
+playerdropdown.addEventListener("change", () => {
+    playerdataupdated(shotdf);
+});
 
 let teamdropdown = document.getElementById('teams');
 teamdropdown.addEventListener('change', teamDataupdated);
@@ -9,6 +11,9 @@ teamdropdown.addEventListener('change', teamDataupdated);
 let shotdf;
 let playerdf;
 let layout;
+let allgoals;
+let allmisses;
+let alluniqids;
 
 async function loadData() {
     const playoffshotdata = await fetch('./json/playoffsshots2025-2025.json');
@@ -30,43 +35,38 @@ async function loadData() {
 
     SetTeamsDropdown(teamdf['internalId'].values, teamdf['teamName'].values);
 
-
-
     console.log(shotdf.shape);
 
-    ids = await shotdf['shooterId'].unique().values;
+    alluniqids = await shotdf['shooterId'].unique().values;
 
-    SetplayerDropDown(ids);
+    SetplayerDropDown(alluniqids);
 
+    allgoals = await shotdf.query(shotdf['eventType'].eq('GOAL'));
 
-    let madeShots = await shotdf.query(shotdf['eventType'].eq('GOAL'));
-
-
-
-    let missedShots = await shotdf.query(shotdf['eventType'].ne('GOAL'));
+    allmisses = await shotdf.query(shotdf['eventType'].ne('GOAL'));
 
     let goalPlot = {
-        x: madeShots['shotX'].values,
-        y: madeShots['shotY'].values,
+        x: allgoals['shotX'].values,
+        y: allgoals['shotY'].values,
         mode: 'markers',
         marker: {
             size: 5,
             color: 'green',
         },
-        type: 'scatter',
+        type: 'scattergl',
         name: 'Goal'
     };
 
 
     let missedPlot = {
-        x: missedShots['shotX'].values,
-        y: missedShots['shotY'].values,
+        x: allmisses['shotX'].values,
+        y: allmisses['shotY'].values,
         mode: 'markers',
         marker: {
             size: 2,
             color: 'red',
         },
-        type: 'scatter',
+        type: 'scattergl',
         name: 'Miss'
     };
 
@@ -76,14 +76,14 @@ async function loadData() {
     layout = {
         xaxis: {
             showline: false,
-            zeroline: false,
-            range: [0, 1000], // Lock the camera so it doesn't auto-zoom!
+            zeroline: true,
+            range: [0, 1023.5], // Lock the camera so it doesn't auto-zoom!
             showgrid: false   // (Optional) Hides the background grid lines
         },
         yaxis: {
             showline: false,
             zeroline: false,
-            range: [0, 500],  // Lock the camera!
+            range: [0, 513],  // Lock the camera!
             showgrid: false
         },
 
@@ -93,21 +93,26 @@ async function loadData() {
                 layer: 'below',
                 xref: 'x',
                 yref: 'y',
-                xanchor: 'left',    // Anchor the left edge of the image to X=0
+                xanchor: '50',    // Anchor the left edge of the image to X=0
                 yanchor: 'bottom',  // Anchor the bottom edge of the image to Y=0
-                sizex: 1000,        // Stretch to 1000 units wide
-                sizey: 500,         // Stretch to 500 units tall
+                sizex: 1023.5,        // Stretch to 1000 units wide
+                sizey: 513,         // Stretch to 500 units tall
                 sizing: 'stretch'   // Forces the image to fit these exact dimensions
             }
         ]
     };
 
     Plotly.newPlot('test', plotdata, layout, {responsive: true});
-
 }
 
 
 async function SetplayerDropDown(ids) {
+
+    playerdropdown.innerHTML = null;
+    let firstOption = document.createElement('option');
+    firstOption.value = 0;
+    firstOption.textContent = 'choose a player';
+    playerdropdown.append(firstOption);
 
    for (const element of ids) {
         let playerOption = document.createElement('option');
@@ -121,17 +126,6 @@ async function SetplayerDropDown(ids) {
     };
 }
 
-async function SetTeamsDropdown(teamid, teamname) {
-
-    console.log(teamid.length == teamname.length);
-    for (i = 0; i < teamid.length; i++) {
-        let teamOption = document.createElement('option');
-        teamOption.value = teamid[i];
-        teamOption.textContent = teamname[i];
-        teamdropdown.append(teamOption);
-    }
-
-}
 
 async function GetPlayerName(id) {
     let namedf = playerdf.query(playerdf['playerId'].eq(parseInt(id)));
@@ -143,17 +137,44 @@ async function GetPlayerName(id) {
     return(fName +  ' ' + lName);
 }
 
+async function SetTeamsDropdown(teamid, teamname) {
+
+    console.log(teamid.length == teamname.length);
+    for (i = 0; i < teamid.length; i++) {
+        let teamOption = document.createElement('option');
+        teamOption.value = teamid[i];
+        teamOption.textContent = teamname[i];
+        teamdropdown.append(teamOption);
+    }
+}
 
 
-async function playerdataupdated() {
+
+async function playerdataupdated(shotdf) {
+
+    if (parseInt(playerdropdown.value) == 0) {
+        if (parseInt(teamdropdown.value) == 0) {
+            teamDataupdated();
+            return;
+        }
+
+        let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
+        let missedShots = shotdf.query(shotdf['eventType'].ne('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
+        UpdateGraph(madeShots, missedShots);
+        return;
+    }
+
     console.log('chosen player id:',  playerdropdown.value)
     //playerdf = await df.query(df['shooterId'].eq(parseInt(dropdown.value)));
 
     let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shooterId'].eq(parseInt(playerdropdown.value))));
 
-
     let missedShots = shotdf.query(shotdf['eventType'].ne('GOAL').and(shotdf['shooterId'].eq(parseInt(playerdropdown.value))));
 
+    UpdateGraph(madeShots, missedShots);
+}
+
+function UpdateGraph(madeShots, missedShots) {
 
     let goalPlot = {
         x: madeShots['shotX'].values,
@@ -163,7 +184,7 @@ async function playerdataupdated() {
             size: 3,
             color: 'green',
         },
-        type: 'scatter',
+        type: 'scattergl',
         name: 'Goal'
     };
 
@@ -176,17 +197,40 @@ async function playerdataupdated() {
             size: 2,
             color: 'red',
         },
-        type: 'scatter',
+        type: 'scattergl',
         name: 'Miss'
     };
 
     let plotdata = [goalPlot, missedPlot];
 
-    Plotly.react('test', plotdata,layout);
+    Plotly.react('test', plotdata, layout);
 }
 
 async function teamDataupdated() {
     console.log('chosen team id: ', teamdropdown.value);
+
+    if (parseInt(teamdropdown.value) == 0) {
+        SetplayerDropDown(alluniqids);
+        UpdateGraph(allgoals, allmisses);
+        return;
+    }
+
+    let ids = await shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
+
+    ids = ids['shooterId'].unique().values
+
+    console.log(ids);
+
+    SetplayerDropDown(ids);
+
+    let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
+
+
+    let missedShots = shotdf.query(shotdf['eventType'].ne('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
+
+
+    UpdateGraph(madeShots, missedShots);
+
 }
 
 loadData();
