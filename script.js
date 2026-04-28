@@ -8,6 +8,17 @@ let teamdropdown = document.getElementById('teams');
 teamdropdown.addEventListener('change', teamDataupdated);
 
 
+const splash = document.querySelector('.splash')
+window.addEventListener('PartLoaded', () => {
+
+    console.log('part event loaded cathced');
+    splash.classList.add('display-none')
+
+});
+
+
+const PartLoadedEvent = new Event('PartLoaded');
+
 let shotdf;
 let playerdf;
 let layout;
@@ -115,6 +126,8 @@ async function loadData() {
     };
 
     Plotly.newPlot('test', plotdata, layout, {responsive: true});
+
+    window.dispatchEvent(PartLoadedEvent);
 }
 
 
