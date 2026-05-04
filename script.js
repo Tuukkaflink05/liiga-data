@@ -12,7 +12,7 @@ const splash = document.querySelector('.splash')
 window.addEventListener('PartLoaded', () => {
 
     console.log('part event loaded cathced');
-    splash.classList.add('display-none')
+
 
 });
 
@@ -283,3 +283,36 @@ https://plotly.com/javascript/reference/layout/images/
 https://plotly.com/javascript/images/
 
 https://danfo.jsdata.org/  */
+
+
+
+var data = [
+  {
+    AboutDevTypeText: '<span>INITIALIZING DATA NEXUS...<br/>LOADING KERNEL_V.7.2.1... [OK]<br/>ESTABLISHING SECURE CONNECTION TO DATA LAKE... [OK]<br/>TYPING BULLSHIT... [OK]</span><br/><br/><span>SYSTEM CHECK: 4096 PETAFLOPS [OK]<br/>QUANTUM THREADING: ALIGNED<br/>VISUALIZATION ENGINE: ONLINE<br/>ANOMALY DETECTION: ACTIVE</span><br/><br/><span>----------------------------------------'
+  }
+];
+
+var allElements = document.getElementsByClassName("typeing");
+for (var j = 0; j < allElements.length; j++) {
+  var currentElementId = allElements[j].id;
+  var currentElementIdContent = data[0][currentElementId];
+  var element = document.getElementById(currentElementId);
+  var devTypeText = currentElementIdContent;
+
+  // type code
+  var i = 0, isTag, text;
+  (function type() {
+    text = devTypeText.slice(0, ++i);
+    console.log(text);
+    if (text === devTypeText) {
+        splash.classList.add('display-none');
+        return;
+    };
+    element.innerHTML = text;
+    var char = text.slice(-1);
+    if (char === "<") isTag = true;
+    if (char === ">") isTag = false;
+    if (isTag) return type();
+    setTimeout(type,6.7);
+  })();
+}

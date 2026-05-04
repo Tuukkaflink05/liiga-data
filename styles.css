@@ -3,6 +3,12 @@
 
 }
 
+body {
+    background: black;
+    color: yellow;
+    font-family: monospace;
+}
+
 
 .splash {
 
@@ -14,14 +20,50 @@
     width: 100%;
     height: 100vh;
     background-color: black;
-    color: white;
     z-index: 200;
 
+    text-shadow:
+        /* The Chromatic Aberration (Color Fringing) */
+        2px 0 0 rgba(255, 71, 87, 0.2),
+        -2px 0 0 rgba(0, 217, 255, 0.2),
 
+        /* The Bloom (Glow) */
+        0 0 5px red,
+        0 0 20px rgb(0, 255, 0),
+        0 0 40px blue;
+
+
+
+}
+
+.crt-filter::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.25) 2px,
+        rgba(0, 0, 0, 0.25) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+    animation: crt-scanline-flicker 0.08s steps(2) infinite;
+}
+
+@keyframes crt-scanline-flicker {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.92;
+    }
 }
 
 .splash.display-none {
     opacity: 0;
     z-index: -10;
-    transition: all 0.5s;
+    transition:all 0.5s;
 }
