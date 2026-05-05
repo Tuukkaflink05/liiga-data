@@ -13,7 +13,7 @@ class files:
     matches = ['runkosarja', 'playoffs']
 
     playersFile = f'json/players-{startSeason}-{endSeason}.json'
-    gamesFile = f'json/runkosarjagames{startSeason}-{endSeason}.json'
+    playoffsgamesFile = f'json/runkosarjagames{startSeason}-{endSeason}.json'
     runksosarjagamesfile = f'json/runkosarjagames{startSeason}-{endSeason}.json'
     playoffsgamesfile = f'json/playoffsgames{startSeason}-{endSeason}.json'
     runksosarjaplayersfile = f'json/runkosarjaplayers{startSeason}-{endSeason}.json'

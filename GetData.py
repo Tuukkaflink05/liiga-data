@@ -14,8 +14,6 @@ headers = {'user-agent': 'Mozilla/5.0'}
 def GetPlayerData():
     allData = []
 
-
-
     path = f'players/stats/summed/{files.startSeason}/{files.endSeason}/{files.matches[1]}/true'
 
     r = requests.get(Baseurl + path, headers=headers)
@@ -42,25 +40,23 @@ def GetGamesData():
     #save all of the data first before adding to a file
     allData = []
 
-    for i in range(len(files.matches)):
-        path = f'games?tournament={files.matches[i]}&season=2025'
-        r = requests.get(Baseurl + path, headers=headers)
-        print(r.url)
 
-        jsondata = r.json()
+    path = f'games?tournament={files.matches[0]}&season={files.endSeason}'
+    r = requests.get(Baseurl + path, headers=headers)
+    print(r.url)
 
-        allData.extend(jsondata)
+    jsondata = r.json()
+
+    allData.extend(jsondata)
 
 
-    with open(files.gamesFile, 'w') as f:
+    with open(files.runksosarjagamesfile, 'w') as f:
         json.dump(allData, f, indent=2)
-
-
 
 
 def GetShotData():
 
-    df = pd.read_json(files.gamesFile)
+    df = pd.read_json(files.runksosarjagamesfile)
 
     idlist = []
 
@@ -80,7 +76,6 @@ def GetShotData():
         wait_time = random.uniform(2.0, 4.0)
 
         time.sleep(wait_time)
-
 
     with open(files.runkosarjashotFile, 'w') as f:
         json.dump(alldata, f, indent=2)
@@ -104,4 +99,4 @@ def GetTeamData():
         json.dump(jsondata, f, indent=2)
 
 
-GetPlayerData()
+GetShotData()

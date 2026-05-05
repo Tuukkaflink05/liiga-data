@@ -7,6 +7,10 @@ playerdropdown.addEventListener("change", () => {
 let teamdropdown = document.getElementById('teams');
 teamdropdown.addEventListener('change', teamDataupdated);
 
+let shotText = document.getElementById('shotText');
+let goalText = document.getElementById('goalText');
+let percText = document.getElementById('percText');
+let veloText = document.getElementById('veloText');
 
 const splash = document.querySelector('.splash')
 window.addEventListener('PartLoaded', () => {
@@ -21,40 +25,54 @@ const PartLoadedEvent = new Event('PartLoaded');
 
 let shotdf;
 let playerdf;
+let velocitydf;
 let layout;
 let allgoals;
 let allmisses;
-let alluniqids;
+let alluniqplayerids;
 
+//only from runkosarja
 async function loadData() {
-    const playoffshotdata = await fetch('./json/playoffsshots2025-2025.json');
+   // const playoffshotdata = await fetch('./json/playoffsshots2025-2025.json');
     const runkosarjashotdata = await fetch('./json/runkosarjashots2025-2025.json');
-    const playerdata = await fetch('./json/players-nodup-2025-2025.json');
+    const playerdata = await fetch('./json/runkosarjaplayers2025-2025.json');
     const teamdata = await fetch('./json/teams-2025-2025.json')
 
-    const rawplayoffdata = await playoffshotdata.json();
+    //const rawplayoffdata = await playoffshotdata.json();
     const rawrunkosarjadata = await runkosarjashotdata.json();
     const rawplayerdata = await playerdata.json();
     const rawteamdata = await teamdata.json();
 
-    const combinedrawdata = [...rawplayoffdata, ...rawrunkosarjadata];
+    //const combinedrawdata = [...rawplayoffdata, ...rawrunkosarjadata];
 
 
-    shotdf = new dfd.DataFrame(combinedrawdata);
+    shotdf = new dfd.DataFrame(rawrunkosarjadata);
     playerdf = new dfd.DataFrame(rawplayerdata);
     teamdf = new dfd.DataFrame(rawteamdata);
 
-    SetTeamsDropdown(teamdf['internalId'].values, teamdf['teamName'].values);
+    alluniqteamids = await teamdf['internalId'].unique().values;
 
-    console.log(shotdf.shape);
+    SetTeamsDropdown(alluniqteamids);
 
-    alluniqids = await shotdf['shooterId'].unique().values;
 
-    SetplayerDropDown(alluniqids);
+    alluniqplayerids = await playerdf['playerId'].unique().values;
+
+
+    SetplayerDropDown(alluniqplayerids);
 
     allgoals = await shotdf.query(shotdf['eventType'].eq('GOAL'));
 
     allmisses = await shotdf.query(shotdf['eventType'].ne('GOAL'));
+
+    // TODO: better way to get the hardest shot and corresponding id
+    velocitydf = playerdf.loc({columns: ['playerId', 'hardestShotVelocity','teamId']});
+    velocitydf.sortValues('hardestShotVelocity', {inplace: true, ascending: false});
+    let hardestshotplayerid = velocitydf.iat(0,0);
+    let playername = await GetPlayerName(hardestshotplayerid);
+    let hardestshotvelo = velocitydf.iat(0,1);
+
+
+    UpdateInfoText(shotdf.shape[0], allgoals.shape[0], playername, hardestshotvelo);
 
     let goalPlot = {
         x: allgoals['shotX'].values,
@@ -152,9 +170,6 @@ async function SetplayerDropDown(ids) {
         let playerOption = document.createElement('option');
         playerOption.value = element;
         let name = await GetPlayerName(element);
-        if (name == null) {
-            continue;
-        }
         playerOption.textContent = name;
         playerdropdown.append(playerOption);
     };
@@ -173,15 +188,32 @@ async function GetPlayerName(id) {
     return(`${fName} ${lName} #${num} (${team})`);
 }
 
-async function SetTeamsDropdown(teamid, teamname) {
+async function SetTeamsDropdown(ids) {
 
-    console.log(teamid.length == teamname.length);
-    for (i = 0; i < teamid.length; i++) {
+    teamdropdown.innerHTML = null;
+    let firstOption = document.createElement('option');
+    firstOption.value = 0;
+    firstOption.textContent = 'choose a Team';
+    teamdropdown.append(firstOption);
+
+   for (const element of ids) {
         let teamOption = document.createElement('option');
-        teamOption.value = teamid[i];
-        teamOption.textContent = teamname[i];
+        teamOption.value = element;
+        let name = await GetTeamName(element);
+        if (name == null) {
+            continue;
+        }
+        teamOption.textContent = name;
         teamdropdown.append(teamOption);
-    }
+    };
+}
+
+async function GetTeamName(id) {
+
+    let namedf = teamdf.query(teamdf['internalId'].eq(parseInt(id)));
+
+    let name = namedf['teamName'].values;
+    return name
 }
 
 
@@ -197,6 +229,7 @@ async function playerdataupdated(shotdf) {
         let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
         let allteamShots = shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
         UpdateGraph(madeShots, allteamShots);
+        UpdateInfoText(allteamShots.shape[0], madeShots.shape[0]);
         return;
     }
 
@@ -208,9 +241,13 @@ async function playerdataupdated(shotdf) {
     let allPlayerShots = shotdf.query(shotdf['shooterId'].eq(parseInt(playerdropdown.value)));
 
     UpdateGraph(madeShots, allPlayerShots);
+
+    UpdateInfoText(allPlayerShots.shape[0], madeShots.shape[0]);
 }
 
 function UpdateGraph(madeShots, allShots) {
+
+
 
     let goalPlot = {
         x: madeShots['shotX'].values,
@@ -245,35 +282,65 @@ function UpdateGraph(madeShots, allShots) {
         name: 'Miss'
     };
 
-
     let plotdata = [goalPlot, missedPlot];
 
     Plotly.react('test', plotdata, layout);
 }
 
+
+
+function UpdateInfoText(shotnum, goalnum, playername, shotvelo) {
+    console.log('all shots taken ', shotnum);
+    console.log('all goals ', goalnum);
+
+    let percGoals = (goalnum / shotnum) * 100;
+    percGoals = percGoals.toFixed(1);
+
+    shotText.innerHTML = `All shots taken: ${shotnum}`;
+    goalText.innerHTML = `Goals: ${goalnum}`;
+    percText.innerHTML = `success procentage: ${percGoals}%`;
+
+    veloText.innerHTML = `hardest shot by: ${playername} at ${shotvelo * 3.6} KM/H`;
+}
+
+
+
 async function teamDataupdated() {
     console.log('chosen team id: ', teamdropdown.value);
 
     if (parseInt(teamdropdown.value) == 0) {
-        SetplayerDropDown(alluniqids);
-        UpdateGraph(allgoals, allmisses);
+        SetplayerDropDown(alluniqplayerids);
+        UpdateGraph(allgoals, shotdf);
+        UpdateInfoText(shotdf.shape[0], allgoals.shape[0]);
         return;
     }
 
     let ids = await shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
+    console.log(ids.print());
 
-    ids = ids['shooterId'].unique().values
+    let uniqids = ids['shooterId'].unique().values
 
-    console.log(ids);
+    console.log(uniqids);
 
-    SetplayerDropDown(ids);
+    SetplayerDropDown(uniqids);
 
     let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
 
 
     let allteamShots = shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
 
+    let teamshotVelocitys = velocitydf.query(velocitydf['teamId'].eq(parseInt(teamdropdown.value)));
+    teamshotVelocitys.sortValues('hardestShotVelocity', {inplace: true, ascending: false});
+    console.log(teamshotVelocitys.print())
+
+    let hardestshotplayerid = teamshotVelocitys.iat(0,0);
+    let playername = await GetPlayerName(hardestshotplayerid);
+    let hardestshotvelo = teamshotVelocitys.iat(0,1);
+
+    //console.log(teamshotVelocitys.print());
+
     UpdateGraph(madeShots, allteamShots);
+    UpdateInfoText(allteamShots.shape[0], madeShots.shape[0],playername,hardestshotvelo);
 
 }
 
@@ -309,7 +376,6 @@ for (var j = 0; j < allElements.length; j++) {
   var i = 0, isTag, text;
   (function type() {
     text = devTypeText.slice(0, ++i);
-    console.log(text);
     if (text === devTypeText) {
         splash.classList.add('display-none');
         return;
