@@ -61,11 +61,11 @@ async function loadData() {
         y: allgoals['shotY'].values,
         mode: 'markers',
         marker: {
-            size: 2,
-            color: 'green',
+            size: 3,
+            color: 'rgb(0,255,0)',
         },
         type: 'scattergl',
-        opacity: 0.6,
+        opacity: 0.7,
         name: 'Goal'
     };
 
@@ -74,11 +74,7 @@ async function loadData() {
         x: shotdf['shotX'].values,
         y: shotdf['shotY'].values,
         type: 'histogram2dcontour',
-        colorscale: [
-            [0, 'rgba(0,0,0,0)'],
-            [0.5, 'rgba(255, 255,0,0.5)'],
-            [1, 'rgba(255,0,0,1)']
-        ],
+        colorscale: Viridis,
         contours: {
         coloring: 'heatmap', // Fills the rings with solid color
 
@@ -86,7 +82,7 @@ async function loadData() {
         },
         line: { width: 0 },
         ncontours: 20, // How smooth the gradient is
-        opacity: 0.6,
+        opacity: 0.9,
         hoverinfo: 'none',
         showscale: false,
 
@@ -110,6 +106,19 @@ async function loadData() {
             showgrid: false
         },
 
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+
+        margin: {
+            b:0, //bottom
+            l:0, //left
+            r:0, //right
+            t:0 //top
+        },
+
+        scattergap: 1,
+        scattermode: 'group',
+
         images: [
             {
                 source: 'pic/Rink-trans-sized.png',
@@ -125,7 +134,7 @@ async function loadData() {
         ]
     };
 
-    Plotly.newPlot('test', plotdata, layout, {responsive: true});
+    Plotly.newPlot('test', plotdata, layout, {responsive: true, displayModeBar: false, staticPlot: true, displayNotifier: false, setBackground: 'black'});
 
     window.dispatchEvent(PartLoadedEvent);
 }
@@ -209,7 +218,8 @@ function UpdateGraph(madeShots, allShots) {
         mode: 'markers',
         marker: {
             size: 3,
-            color: 'green',
+            color: 'rgb(0,255,0)',
+            opacity: 0.8,
         },
         type: 'scattergl',
         name: 'Goal'
@@ -220,11 +230,7 @@ function UpdateGraph(madeShots, allShots) {
         x: allShots['shotX'].values,
         y: allShots['shotY'].values,
         type: 'histogram2dcontour',
-        colorscale: [
-            [0, 'rgba(0,0,0,0)'],
-            [0.5, 'rgba(255, 255,0,0.5)'],
-            [1, 'rgba(255,0,0,1)']
-        ],
+        colorscale: Viridis,
         contours: {
         coloring: 'heatmap', // Fills the rings with solid color
 
@@ -232,7 +238,7 @@ function UpdateGraph(madeShots, allShots) {
         },
         line: { width: 0 },
         ncontours: 20, // How smooth the gradient is
-        opacity: 0.6,
+        opacity: 0.8,
         hoverinfo: 'none',
         showscale: false,
 
@@ -316,3 +322,24 @@ for (var j = 0; j < allElements.length; j++) {
     setTimeout(type,6.7);
   })();
 }
+
+
+let Viridis = [
+    [0,                    'rgba(68, 1, 84, 0)'],
+    [0.06274509803921569,  'rgba(72, 24, 106, 0.02)'],
+    [0.12549019607843137,  'rgba(71, 45, 123, 0.05)'],
+    [0.18823529411764706,  'rgba(66, 64, 134, 0.09)'],
+    [0.25098039215686274,  'rgba(59, 82, 139, 0.14)'],
+    [0.3137254901960784,   'rgba(51, 99, 141, 0.20)'],
+    [0.3764705882352941,   'rgba(44, 114, 142, 0.27)'],
+    [0.4392156862745098,   'rgba(38, 130, 142, 0.35)'],
+    [0.5019607843137255,   'rgba(33, 145, 140, 0.43)'],
+    [0.5647058823529412,   'rgba(31, 160, 136, 0.52)'],
+    [0.6274509803921569,   'rgba(40, 174, 128, 0.61)'],
+    [0.6901960784313725,   'rgba(63, 188, 115, 0.70)'],
+    [0.7529411764705882,   'rgba(94, 201, 98, 0.78)'],
+    [0.8156862745098039,   'rgba(132, 212, 75, 0.86)'],
+    [0.8784313725490196,   'rgba(173, 220, 48, 0.92)'],
+    [0.9411764705882353,   'rgba(216, 226, 25, 0.97)'],
+    [1,                    'rgba(253, 231, 37, 1.0)'],
+];

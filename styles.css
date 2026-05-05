@@ -4,9 +4,20 @@
 }
 
 body {
-    background: black;
+    background: rgb(31, 31, 31);
     color: yellow;
     font-family: monospace;
+
+    text-shadow:
+        /* The Chromatic Aberration (Color Fringing) */
+        2px 0 0 rgba(255, 71, 87, 0.2),
+        -2px 0 0 rgba(0, 217, 255, 0.2),
+
+        /* The Bloom (Glow) */
+        0 0 5px red,
+        0 0 20px rgb(0, 255, 0),
+        0 0 40px blue;
+
 }
 
 
@@ -21,19 +32,6 @@ body {
     height: 100vh;
     background-color: black;
     z-index: 200;
-
-    text-shadow:
-        /* The Chromatic Aberration (Color Fringing) */
-        2px 0 0 rgba(255, 71, 87, 0.2),
-        -2px 0 0 rgba(0, 217, 255, 0.2),
-
-        /* The Bloom (Glow) */
-        0 0 5px red,
-        0 0 20px rgb(0, 255, 0),
-        0 0 40px blue;
-
-
-
 }
 
 .crt-filter::before {
