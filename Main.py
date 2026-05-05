@@ -14,6 +14,10 @@ class files:
 
     playersFile = f'json/players-{startSeason}-{endSeason}.json'
     gamesFile = f'json/runkosarjagames{startSeason}-{endSeason}.json'
+    runksosarjagamesfile = f'json/runkosarjagames{startSeason}-{endSeason}.json'
+    playoffsgamesfile = f'json/playoffsgames{startSeason}-{endSeason}.json'
+    runksosarjaplayersfile = f'json/runkosarjaplayers{startSeason}-{endSeason}.json'
+    playoffsplayerfile = f'json/playoffsplayers{startSeason}-{endSeason}.json'
     runkosarjashotFile = f'json/{matches[0]}shots{startSeason}-{endSeason}.json'
     playoffsshotfile = f'json/{matches[1]}shots{startSeason}-{endSeason}.json'
     nodupplayers = f'json/players-nodup-{startSeason}-{endSeason}.json'

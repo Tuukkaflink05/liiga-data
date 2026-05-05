@@ -14,17 +14,17 @@ headers = {'user-agent': 'Mozilla/5.0'}
 def GetPlayerData():
     allData = []
 
-    for i in range(len(files.matches)):
 
-        path = f'players/stats/summed/{files.startSeason}/{files.endSeason}/{files.matches[i]}/true'
 
-        r = requests.get(Baseurl + path, headers=headers)
+    path = f'players/stats/summed/{files.startSeason}/{files.endSeason}/{files.matches[1]}/true'
 
-        print(r.url)
+    r = requests.get(Baseurl + path, headers=headers)
 
-        allData.extend(r.json())
+    print(r.url)
 
-    with open(files.playersFile, 'w') as f:
+    allData.extend(r.json())
+
+    with open(files.playoffsplayerfile, 'w') as f:
         json.dump(allData, f, indent=2)
 
 
@@ -104,4 +104,4 @@ def GetTeamData():
         json.dump(jsondata, f, indent=2)
 
 
-GetTeamData()
+GetPlayerData()
