@@ -309,6 +309,7 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
     let goalnum = goaldf.shape[0];
 
     let allshotdistances = 0;
+    let allshotdistancesarr = [];
     let shotx = shotdf['shotX'].values;
     let shoty = shotdf['shotY'].values;
 
@@ -317,39 +318,50 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
         if (shotx[i] <= 500) {
             let distance = Math.sqrt(Math.pow(60 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
             allshotdistances += distance;
+            allshotdistancesarr.push(distance);
         } else {
             let distance = Math.sqrt(Math.pow(940 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
             allshotdistances += distance;
+            allshotdistancesarr.push(distance);
         }
     }
-    let averageshotdist = (allshotdistances / shotx.length);
+
+    let meanshotdist = (allshotdistances / shotx.length);
 
     let allgoaldistances = 0;
+    let allgoaldistancesarr = [];
     let goalx = goaldf['shotX'].values;
     let goaly = goaldf['shotY'].values;
-
-    console.log(goalx);
-    console.log(goaly);
 
     for (let i = 0; i < goalx.length; i++) {
 
         if (goalx[i] <= 500) {
             let distance = Math.sqrt(Math.pow(60 - goalx[i], 2) + Math.pow(250 - goaly[i], 2));
             allgoaldistances += distance;
+            allgoaldistancesarr.push(distance);
         } else {
             let distance = Math.sqrt(Math.pow(940 - goalx[i], 2) + Math.pow(250 - goaly[i], 2));
             allgoaldistances += distance;
+            allgoaldistancesarr.push(distance);
         }
     }
-    let averagegoaldist = (allgoaldistances / goalx.length);
+    let meangoaldist = (allgoaldistances / goalx.length);
 
 
 
-    averageshotdist = ((averageshotdist / 1000) * 60).toFixed(1);
-    averagegoaldist = ((averagegoaldist / 1000) * 60).toFixed(1);
+    meanshotdist = unitToMeter(meanshotdist);
+    meangoaldist = unitToMeter(meangoaldist);
 
-    console.log('average goal distance ', averagegoaldist);
-    console.log('average shot distance ', averageshotdist);
+    let medianshotdist = unitToMeter(calculateMedian(allshotdistancesarr));
+    let mediangoaldist = unitToMeter(calculateMedian(allgoaldistancesarr));
+
+
+    console.log('mean goal distance ', meangoaldist);
+    console.log('mean shot distance ', meanshotdist);
+
+    console.log('median shot distance ', medianshotdist);
+    console.log('median goal distance ', mediangoaldist);
+
 
 
     console.log('all shots taken ', shotnum);
@@ -361,8 +373,10 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
     let teaminfo = [`All shots taken: ${shotnum}`,
                     `Goals: ${goalnum}`,
                     `success procentage: ${percGoals}%`,
-                    `avg shot distance: ${averageshotdist} M`,
-                    `avg Goal distance: ${averagegoaldist} M`
+                    `Mean shot distance: ${meanshotdist} M`,
+                    `Median shot distance: ${medianshotdist} M`,
+                    `Mean Goal distance: ${meangoaldist} M`,
+                    `Median Goal distance: ${mediangoaldist} M`
                 ];
 
     for (const item of teaminfo) {
@@ -421,6 +435,8 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
 
 
 
+
+
 async function teamDataupdated() {
     console.log('chosen team id: ', teamdropdown.value);
 
@@ -451,6 +467,31 @@ async function teamDataupdated() {
 }
 
 loadData();
+
+function unitToMeter(unit) {
+    return ((unit / 1000) * 60).toFixed(1);
+}
+
+function calculateMedian(arr) {
+
+    arr.sort((a, b) => a - b);
+
+    const length = arr.length;
+    const middle = Math.floor(length / 2);
+
+    // Check if the array length is even or odd
+    if (length % 2 === 0) {
+
+        // If even, return the average of middle two elements
+        return (arr[middle - 1] + arr[middle]) / 2;
+    } else {
+
+        // If odd, return the middle element
+        return arr[middle];
+    }
+}
+
+
 
 
 //https://plotly.com/javascript/
