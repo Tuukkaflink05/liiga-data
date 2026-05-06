@@ -75,12 +75,16 @@ async function loadData() {
     let playername = await GetPlayerName(hardestshotplayerid);
     let hardestshotvelo = velocitydf.iat(0,1);
 
+    // goal on left x:60 y:250
+    // goal on right x:940 y:250
 
-    UpdateInfoText(shotdf.shape[0], allgoals.shape[0]);
+    //calculate distance from both points depending if x is less than or more than 500
+
+    UpdateInfoText(shotdf, allgoals);
 
     let goalPlot = {
-        x: allgoals['shotX'].values,
-        y: allgoals['shotY'].values,
+        x: [940,60],
+        y: [250,250],
         mode: 'markers',
         marker: {
             size: 3,
@@ -118,13 +122,13 @@ async function loadData() {
         xaxis: {
             showline: false,
             zeroline: true,
-            range: [0, 1023.5], // Lock the camera so it doesn't auto-zoom!
+            range: [0, 1000], // Lock the camera so it doesn't auto-zoom!
             showgrid: false   // (Optional) Hides the background grid lines
         },
         yaxis: {
             showline: false,
             zeroline: false,
-            range: [0, 513],  // Lock the camera!
+            range: [0, 500],  // Lock the camera!
             showgrid: false
         },
 
@@ -149,8 +153,8 @@ async function loadData() {
                 yref: 'y',
                 xanchor: '50',    // Anchor the left edge of the image to X=0
                 yanchor: 'bottom',  // Anchor the bottom edge of the image to Y=0
-                sizex: 1023.5,        // Stretch to 1000 units wide
-                sizey: 513,         // Stretch to 500 units tall
+                sizex: 1000,        // Stretch to 1000 units wide
+                sizey: 500,         // Stretch to 500 units tall
                 sizing: 'stretch'   // Forces the image to fit these exact dimensions
             }
         ]
@@ -233,7 +237,7 @@ async function playerdataupdated(shotdf) {
         let madeShots = shotdf.query(shotdf['eventType'].eq('GOAL').and(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value))));
         let allteamShots = shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
         UpdateGraph(madeShots, allteamShots);
-        UpdateInfoText(allteamShots.shape[0], madeShots.shape[0]);
+        UpdateInfoText(allteamShots, madeShots);
         return;
     }
 
@@ -246,7 +250,7 @@ async function playerdataupdated(shotdf) {
 
     UpdateGraph(madeShots, allPlayerShots);
 
-    UpdateInfoText(allPlayerShots.shape[0], madeShots.shape[0],parseInt(playerdropdown.value));
+    UpdateInfoText(allPlayerShots, madeShots,parseInt(playerdropdown.value));
 }
 
 function UpdateGraph(madeShots, allShots) {
@@ -291,11 +295,63 @@ function UpdateGraph(madeShots, allShots) {
     Plotly.react('test', plotdata, layout);
 }
 
+    // goal on left x:60 y:250
+    // goal on right x:940 y:250
 
+function distance(x1,y1) {
+    return Math.sqrt(Math.pow(60 - x1, 2) + Math.pow(250 - y1, 2));
+}
 
-function UpdateInfoText(shotnum, goalnum, playerid) {
+function UpdateInfoText(shotdf, goaldf, playerid) {
     teaminfolist.innerHTML = null;
     playerinfolist.innerHTML = null;
+    let shotnum = shotdf.shape[0];
+    let goalnum = goaldf.shape[0];
+
+    let allshotdistances = 0;
+    let shotx = shotdf['shotX'].values;
+    let shoty = shotdf['shotY'].values;
+
+        for (let i = 0; i < shotx.length; i++) {
+
+        if (shotx[i] <= 500) {
+            let distance = Math.sqrt(Math.pow(60 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
+            allshotdistances += distance;
+        } else {
+            let distance = Math.sqrt(Math.pow(940 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
+            allshotdistances += distance;
+        }
+    }
+    let averageshotdist = (allshotdistances / shotx.length);
+
+    let allgoaldistances = 0;
+    let goalx = goaldf['shotX'].values;
+    let goaly = goaldf['shotY'].values;
+
+    console.log(goalx);
+    console.log(goaly);
+
+    for (let i = 0; i < goalx.length; i++) {
+
+        if (goalx[i] <= 500) {
+            let distance = Math.sqrt(Math.pow(60 - goalx[i], 2) + Math.pow(250 - goaly[i], 2));
+            allgoaldistances += distance;
+        } else {
+            let distance = Math.sqrt(Math.pow(940 - goalx[i], 2) + Math.pow(250 - goaly[i], 2));
+            allgoaldistances += distance;
+        }
+    }
+    let averagegoaldist = (allgoaldistances / goalx.length);
+
+
+
+    averageshotdist = ((averageshotdist / 1000) * 60).toFixed(1);
+    averagegoaldist = ((averagegoaldist / 1000) * 60).toFixed(1);
+
+    console.log('average goal distance ', averagegoaldist);
+    console.log('average shot distance ', averageshotdist);
+
+
     console.log('all shots taken ', shotnum);
     console.log('all goals ', goalnum);
 
@@ -304,7 +360,10 @@ function UpdateInfoText(shotnum, goalnum, playerid) {
 
     let teaminfo = [`All shots taken: ${shotnum}`,
                     `Goals: ${goalnum}`,
-                    `success procentage: ${percGoals}%`];
+                    `success procentage: ${percGoals}%`,
+                    `avg shot distance: ${averageshotdist} M`,
+                    `avg Goal distance: ${averagegoaldist} M`
+                ];
 
     for (const item of teaminfo) {
         const lielement = document.createElement('li');
@@ -368,7 +427,7 @@ async function teamDataupdated() {
     if (parseInt(teamdropdown.value) == 0) {
         SetplayerDropDown(alluniqplayerids);
         UpdateGraph(allgoals, shotdf);
-        UpdateInfoText(shotdf.shape[0], allgoals.shape[0]);
+        UpdateInfoText(shotdf, allgoals);
         return;
     }
 
@@ -387,7 +446,7 @@ async function teamDataupdated() {
     let allteamShots = shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
 
     UpdateGraph(madeShots, allteamShots);
-    UpdateInfoText(allteamShots.shape[0], madeShots.shape[0]);
+    UpdateInfoText(allteamShots, madeShots);
 
 }
 
