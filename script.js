@@ -1,16 +1,19 @@
 // global variables.
-let playerdropdown = document.getElementById('players');
+const playerdropdown = document.getElementById('players');
 playerdropdown.addEventListener("change", () => {
     playerdataupdated(shotdf);
 });
 
-let teamdropdown = document.getElementById('teams');
+const teamdropdown = document.getElementById('teams');
 teamdropdown.addEventListener('change', teamDataupdated);
 
-let shotText = document.getElementById('shotText');
-let goalText = document.getElementById('goalText');
-let percText = document.getElementById('percText');
-let veloText = document.getElementById('veloText');
+//team info
+const teaminfolist = document.getElementById('team-info-list');
+
+
+//player info
+const playerinfolist = document.getElementById('player-info-list');
+
 
 const splash = document.querySelector('.splash')
 window.addEventListener('PartLoaded', () => {
@@ -30,6 +33,7 @@ let layout;
 let allgoals;
 let allmisses;
 let alluniqplayerids;
+let alluniqteamids;
 
 //only from runkosarja
 async function loadData() {
@@ -55,7 +59,7 @@ async function loadData() {
     SetTeamsDropdown(alluniqteamids);
 
 
-    alluniqplayerids = await playerdf['playerId'].unique().values;
+    alluniqplayerids = await shotdf['shooterId'].unique().values;
 
 
     SetplayerDropDown(alluniqplayerids);
@@ -72,7 +76,7 @@ async function loadData() {
     let hardestshotvelo = velocitydf.iat(0,1);
 
 
-    UpdateInfoText(shotdf.shape[0], allgoals.shape[0], playername, hardestshotvelo);
+    UpdateInfoText(shotdf.shape[0], allgoals.shape[0]);
 
     let goalPlot = {
         x: allgoals['shotX'].values,
@@ -242,7 +246,7 @@ async function playerdataupdated(shotdf) {
 
     UpdateGraph(madeShots, allPlayerShots);
 
-    UpdateInfoText(allPlayerShots.shape[0], madeShots.shape[0]);
+    UpdateInfoText(allPlayerShots.shape[0], madeShots.shape[0],parseInt(playerdropdown.value));
 }
 
 function UpdateGraph(madeShots, allShots) {
@@ -289,18 +293,71 @@ function UpdateGraph(madeShots, allShots) {
 
 
 
-function UpdateInfoText(shotnum, goalnum, playername, shotvelo) {
+function UpdateInfoText(shotnum, goalnum, playerid) {
+    teaminfolist.innerHTML = null;
+    playerinfolist.innerHTML = null;
     console.log('all shots taken ', shotnum);
     console.log('all goals ', goalnum);
 
     let percGoals = (goalnum / shotnum) * 100;
     percGoals = percGoals.toFixed(1);
 
-    shotText.innerHTML = `All shots taken: ${shotnum}`;
-    goalText.innerHTML = `Goals: ${goalnum}`;
-    percText.innerHTML = `success procentage: ${percGoals}%`;
+    let teaminfo = [`All shots taken: ${shotnum}`,
+                    `Goals: ${goalnum}`,
+                    `success procentage: ${percGoals}%`];
 
-    veloText.innerHTML = `hardest shot by: ${playername} at ${shotvelo * 3.6} KM/H`;
+    for (const item of teaminfo) {
+        const lielement = document.createElement('li');
+        lielement.textContent = item;
+        teaminfolist.appendChild(lielement);
+    }
+
+    if (playerid == null) {
+        const lielement = document.createElement('li');
+        lielement.textContent = 'choose a player to see info';
+        playerinfolist.appendChild(lielement);
+        return;
+    }
+
+    currentplayerdf = playerdf.query(playerdf['playerId'].eq(playerid));
+
+
+    let veloc = currentplayerdf['hardestShotVelocity'].values;
+    let topSpeed = currentplayerdf['topSpeed'].values;
+    let games = currentplayerdf['playedGames'].values;
+    let role = currentplayerdf['role'].values
+    let nationality = currentplayerdf['nationality'].values;
+    let timeOnIceAvg = currentplayerdf['timeOnIceAvg'].values;
+    let shifts = currentplayerdf['shifts'].values;
+    let shiftsPerGame = currentplayerdf['countOnIceAvg'].values;
+    let shitftTimeAvg = (timeOnIceAvg / shiftsPerGame);
+    let distancePerMatch = currentplayerdf['distancePerMatch'].values;
+   /* let evenStrengthPassPercentage = currentplayerdf['evenStrengthPassPercentage'].values;
+    let powerplayPassPercentage = currentplayerdf['powerplayPassPercentage'].values;    */
+    let expectedGoals = currentplayerdf['expectedGoals'].values;
+    let pdo = currentplayerdf['pdo'].values
+
+
+
+    let playerinfo = [`hardest shot: ${Math.round(veloc * 3.6)} KM/H`,
+                        `top Speed: ${(topSpeed * 3.6).toFixed(1)} KM/H`,
+                        `Games Played: ${games}`,
+                        `Role: ${role}`,
+                        `Nationality: ${nationality}`,
+                        `average Time on ice per game: ${Math.round(timeOnIceAvg / 60)} Minutes`,
+                        `average shifts per game: ${shiftsPerGame}`,
+                        `average shift time: ${shitftTimeAvg.toFixed(1)} Seconds`,
+                        `average distance per match: ${(distancePerMatch / 1000).toFixed(2)} KM`,
+                        `Goals above Expected: ${(goalnum - expectedGoals).toFixed(1)}`,
+                        `pdo: ${pdo}`,
+    ];
+
+    for (const item of playerinfo) {
+        const lielement = document.createElement('li');
+        lielement.textContent = item;
+        playerinfolist.appendChild(lielement);
+    }
+
 }
 
 
@@ -316,7 +373,7 @@ async function teamDataupdated() {
     }
 
     let ids = await shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
-    console.log(ids.print());
+
 
     let uniqids = ids['shooterId'].unique().values
 
@@ -329,18 +386,8 @@ async function teamDataupdated() {
 
     let allteamShots = shotdf.query(shotdf['shootingTeamId'].eq(parseInt(teamdropdown.value)));
 
-    let teamshotVelocitys = velocitydf.query(velocitydf['teamId'].eq(parseInt(teamdropdown.value)));
-    teamshotVelocitys.sortValues('hardestShotVelocity', {inplace: true, ascending: false});
-    console.log(teamshotVelocitys.print())
-
-    let hardestshotplayerid = teamshotVelocitys.iat(0,0);
-    let playername = await GetPlayerName(hardestshotplayerid);
-    let hardestshotvelo = teamshotVelocitys.iat(0,1);
-
-    //console.log(teamshotVelocitys.print());
-
     UpdateGraph(madeShots, allteamShots);
-    UpdateInfoText(allteamShots.shape[0], madeShots.shape[0],playername,hardestshotvelo);
+    UpdateInfoText(allteamShots.shape[0], madeShots.shape[0]);
 
 }
 
