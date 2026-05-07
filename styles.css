@@ -1,7 +1,8 @@
 #test {
-    aspect-ratio: 2 / 1;
-    padding-left: 75px;
-    padding-right: 75px;
+    aspect-ratio: 1 / 1;
+    transform: rotate(90deg);
+
+    max-width: 500px;
 
 }
 
