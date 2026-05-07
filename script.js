@@ -54,6 +54,12 @@ async function loadData() {
     playerdf = new dfd.DataFrame(rawplayerdata);
     teamdf = new dfd.DataFrame(rawteamdata);
 
+    //mirror shots to one side
+    let mirrored = mirrorShots(shotdf['shotX'].values, shotdf['shotY'].values);
+
+    shotdf.addColumn('shotY', mirrored.y, {inplace: true});
+    shotdf.addColumn('shotX', mirrored.x, {inplace: true});
+
     alluniqteamids = await teamdf['internalId'].unique().values;
 
     SetTeamsDropdown(alluniqteamids);
@@ -69,12 +75,12 @@ async function loadData() {
     allmisses = await shotdf.query(shotdf['eventType'].ne('GOAL'));
 
     // TODO: better way to get the hardest shot and corresponding id
-    velocitydf = playerdf.loc({columns: ['playerId', 'hardestShotVelocity','teamId']});
+  /*  velocitydf = playerdf.loc({columns: ['playerId', 'hardestShotVelocity','teamId']});
     velocitydf.sortValues('hardestShotVelocity', {inplace: true, ascending: false});
     let hardestshotplayerid = velocitydf.iat(0,0);
     let playername = await GetPlayerName(hardestshotplayerid);
     let hardestshotvelo = velocitydf.iat(0,1);
-
+*/
     // goal on left x:60 y:250
     // goal on right x:940 y:250
 
@@ -83,8 +89,8 @@ async function loadData() {
     UpdateInfoText(shotdf, allgoals);
 
     let goalPlot = {
-        x: [940,60],
-        y: [250,250],
+        x: allgoals['shotX'].values,
+        y: allgoals['shotY'].values,
         mode: 'markers',
         marker: {
             size: 3,
@@ -122,7 +128,7 @@ async function loadData() {
         xaxis: {
             showline: false,
             zeroline: true,
-            range: [0, 1000], // Lock the camera so it doesn't auto-zoom!
+            range: [0, 500], // Lock the camera so it doesn't auto-zoom!
             showgrid: false   // (Optional) Hides the background grid lines
         },
         yaxis: {
@@ -147,13 +153,13 @@ async function loadData() {
 
         images: [
             {
-                source: 'pic/Rink-trans-sized.png',
+                source: 'pic/Rink-half-sized.png',
                 layer: 'below',
                 xref: 'x',
                 yref: 'y',
-                xanchor: '50',    // Anchor the left edge of the image to X=0
+                xanchor: '0',    // Anchor the left edge of the image to X=0
                 yanchor: 'bottom',  // Anchor the bottom edge of the image to Y=0
-                sizex: 1000,        // Stretch to 1000 units wide
+                sizex: 500,        // Stretch to 1000 units wide
                 sizey: 500,         // Stretch to 500 units tall
                 sizing: 'stretch'   // Forces the image to fit these exact dimensions
             }
@@ -405,8 +411,8 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
     let shiftsPerGame = currentplayerdf['countOnIceAvg'].values;
     let shitftTimeAvg = (timeOnIceAvg / shiftsPerGame);
     let distancePerMatch = currentplayerdf['distancePerMatch'].values;
-   /* let evenStrengthPassPercentage = currentplayerdf['evenStrengthPassPercentage'].values;
-    let powerplayPassPercentage = currentplayerdf['powerplayPassPercentage'].values;    */
+    let evenStrengthPassPercentage = currentplayerdf['evenStrengthPassPercentage'].values;
+    let powerplayPassPercentage = currentplayerdf['powerplayPassPercentage'].values;
     let expectedGoals = currentplayerdf['expectedGoals'].values;
     let pdo = currentplayerdf['pdo'].values
 
@@ -423,6 +429,8 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
                         `average distance per match: ${(distancePerMatch / 1000).toFixed(2)} KM`,
                         `Goals above Expected: ${(goalnum - expectedGoals).toFixed(1)}`,
                         `pdo: ${pdo}`,
+                        `Pass percentage on even strength: ${evenStrengthPassPercentage}%`,
+                        `Pass percentage on power play: ${powerplayPassPercentage}%`,
     ];
 
     for (const item of playerinfo) {
@@ -470,6 +478,26 @@ loadData();
 
 function unitToMeter(unit) {
     return ((unit / 1000) * 60).toFixed(1);
+}
+
+function mirrorShots(xarr,yarr) {
+
+    let newY = [];
+    let newX = [];
+
+    for (let i = 0; i < yarr.length; i++) {
+
+        yarr[i] = 500 - yarr[i];
+
+        if (xarr[i] > 500) {
+            newY.push(500 - yarr[i]);
+            newX.push(1000 - xarr[i]);
+        } else {
+            newY.push(yarr[i]);
+            newX.push(xarr[i]);
+        }
+    }
+    return {x: newX, y: newY};
 }
 
 function calculateMedian(arr) {

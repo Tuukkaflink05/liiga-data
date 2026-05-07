@@ -1,9 +1,12 @@
 #test {
     aspect-ratio: 2 / 1;
+    padding-left: 75px;
+    padding-right: 75px;
 
 }
 
 body {
+
     background: rgb(31, 31, 31);
     color: yellow;
     font-family: monospace;
@@ -20,6 +23,57 @@ body {
 
 }
 
+select {
+    text-shadow:
+        /* The Chromatic Aberration (Color Fringing)*/
+        2px 0 0 rgba(255, 71, 87, 0.2),
+        -2px 0 0 rgba(0, 217, 255, 0.2),
+
+        /* The Bloom (Glow)*/
+        0 0 5px red,
+        0 0 7px rgb(0, 255, 0),
+        0 0 10px blue;
+
+
+    color: yellow;
+    border-radius: 25px;
+    border: 2px solid yellow;
+    cursor: pointer;
+
+    padding: 1vw;
+    background: transparent;
+    min-width: 250px;
+}
+
+
+select:hover {
+    background: rgba(255, 255, 0, 0.05);
+}
+
+option {
+    cursor: pointer;
+    background: rgb(62, 62, 62);
+    border-radius: 0px;
+
+    transform: rotate(180deg);
+}
+
+
+.info-box {
+    float: left;
+    border: 1px solid yellow;
+    min-height: 300px;
+    margin: 10px;
+    padding: 3vh;
+
+        box-shadow:
+
+
+        /* The Bloom (Glow)*/
+        0 0 3px red,
+        0 0 5px rgb(0, 255, 0),
+        0 0 5px blue;
+}
 
 .splash {
 
