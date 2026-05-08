@@ -1,3 +1,6 @@
+import {unitToMeter, mirrorShots, calculateMedian, calcDistances} from './helpers.js';
+import {Viridis} from './config.js';
+
 // global variables.
 const playerdropdown = document.getElementById('players');
 playerdropdown.addEventListener("change", () => {
@@ -23,11 +26,11 @@ window.addEventListener('PartLoaded', () => {
 
 });
 
-
 const PartLoadedEvent = new Event('PartLoaded');
 
 let shotdf;
 let playerdf;
+let teamdf;
 let velocitydf;
 let layout;
 let allgoals;
@@ -189,19 +192,6 @@ async function SetplayerDropDown(ids) {
     };
 }
 
-
-async function GetPlayerName(id) {
-    let namedf = playerdf.query(playerdf['playerId'].eq(parseInt(id)));
-    let fName = namedf['firstName'].values;
-    if (fName.length == 0) {
-        return;
-    }
-    let lName = namedf['lastName'].values;
-    let num = namedf['jersey'].values;
-    let team = namedf['teamName'].values;
-    return(`${fName} ${lName} #${num} (${team})`);
-}
-
 async function SetTeamsDropdown(ids) {
 
     teamdropdown.innerHTML = null;
@@ -221,16 +211,6 @@ async function SetTeamsDropdown(ids) {
         teamdropdown.append(teamOption);
     };
 }
-
-async function GetTeamName(id) {
-
-    let namedf = teamdf.query(teamdf['internalId'].eq(parseInt(id)));
-
-    let name = namedf['teamName'].values;
-    return name
-}
-
-
 
 async function playerdataupdated(shotdf) {
 
@@ -260,8 +240,6 @@ async function playerdataupdated(shotdf) {
 }
 
 function UpdateGraph(madeShots, allShots) {
-
-
 
     let goalPlot = {
         x: madeShots['shotX'].values,
@@ -304,9 +282,6 @@ function UpdateGraph(madeShots, allShots) {
     // goal on left x:60 y:250
     // goal on right x:940 y:250
 
-function distance(x1,y1) {
-    return Math.sqrt(Math.pow(60 - x1, 2) + Math.pow(250 - y1, 2));
-}
 
 function UpdateInfoText(shotdf, goaldf, playerid) {
     teaminfolist.innerHTML = null;
@@ -368,7 +343,7 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
         return;
     }
 
-    currentplayerdf = playerdf.query(playerdf['playerId'].eq(playerid));
+    let currentplayerdf = playerdf.query(playerdf['playerId'].eq(playerid));
 
 
     let veloc = currentplayerdf['hardestShotVelocity'].values;
@@ -411,29 +386,6 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
 
 }
 
-
-
-
-
-function calcDistances(shotx, shoty) {
-    let alldistancesnum = 0;
-    let alldistancesarr = [];
-
-    for (let i = 0; i < shotx.length; i++) {
-
-        if (shotx[i] <= 500) {
-            let distance = Math.sqrt(Math.pow(60 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
-            alldistancesnum += distance;
-            alldistancesarr.push(distance);
-        } else {
-            let distance = Math.sqrt(Math.pow(940 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
-            alldistancesnum += distance;
-            alldistancesarr.push(distance);
-        }
-    }
-    return {num: alldistancesnum, arr: alldistancesarr};
-}
-
 async function teamDataupdated() {
     console.log('chosen team id: ', teamdropdown.value);
 
@@ -463,50 +415,27 @@ async function teamDataupdated() {
 
 }
 
+async function GetTeamName(id) {
+
+    let namedf = teamdf.query(teamdf['internalId'].eq(parseInt(id)));
+
+    let name = namedf['teamName'].values;
+    return name
+}
+
+async function GetPlayerName(id) {
+    let namedf = playerdf.query(playerdf['playerId'].eq(parseInt(id)));
+    let fName = namedf['firstName'].values;
+    if (fName.length == 0) {
+        return;
+    }
+    let lName = namedf['lastName'].values;
+    let num = namedf['jersey'].values;
+    let team = namedf['teamName'].values;
+    return(`${fName} ${lName} #${num} (${team})`);
+}
+
 loadData();
-
-function unitToMeter(unit) {
-    return ((unit / 1000) * 60).toFixed(1);
-}
-
-function mirrorShots(xarr,yarr) {
-
-    let newY = [];
-    let newX = [];
-
-    for (let i = 0; i < yarr.length; i++) {
-
-        if (xarr[i] > 500) {
-            newY.push(yarr[i]);
-            newX.push(1000 - xarr[i]);
-        } else {
-            newY.push(500 - yarr[i]);
-            newX.push(xarr[i]);
-        }
-    }
-    return {x: newX, y: newY};
-}
-
-function calculateMedian(arr) {
-
-    arr.sort((a, b) => a - b);
-
-    const length = arr.length;
-    const middle = Math.floor(length / 2);
-
-    // Check if the array length is even or odd
-    if (length % 2 === 0) {
-
-        // If even, return the average of middle two elements
-        return (arr[middle - 1] + arr[middle]) / 2;
-    } else {
-
-        // If odd, return the middle element
-        return arr[middle];
-    }
-}
-
-
 
 
 //https://plotly.com/javascript/
@@ -550,24 +479,3 @@ for (var j = 0; j < allElements.length; j++) {
     setTimeout(type,6.7);
   })();
 }
-
-
-let Viridis = [
-    [0,                    'rgba(68, 1, 84, 0)'],
-    [0.06274509803921569,  'rgba(72, 24, 106, 0.02)'],
-    [0.12549019607843137,  'rgba(71, 45, 123, 0.05)'],
-    [0.18823529411764706,  'rgba(66, 64, 134, 0.09)'],
-    [0.25098039215686274,  'rgba(59, 82, 139, 0.14)'],
-    [0.3137254901960784,   'rgba(51, 99, 141, 0.20)'],
-    [0.3764705882352941,   'rgba(44, 114, 142, 0.27)'],
-    [0.4392156862745098,   'rgba(38, 130, 142, 0.35)'],
-    [0.5019607843137255,   'rgba(33, 145, 140, 0.43)'],
-    [0.5647058823529412,   'rgba(31, 160, 136, 0.52)'],
-    [0.6274509803921569,   'rgba(40, 174, 128, 0.61)'],
-    [0.6901960784313725,   'rgba(63, 188, 115, 0.70)'],
-    [0.7529411764705882,   'rgba(94, 201, 98, 0.78)'],
-    [0.8156862745098039,   'rgba(132, 212, 75, 0.86)'],
-    [0.8784313725490196,   'rgba(173, 220, 48, 0.92)'],
-    [0.9411764705882353,   'rgba(216, 226, 25, 0.97)'],
-    [1,                    'rgba(253, 231, 37, 1.0)'],
-];
