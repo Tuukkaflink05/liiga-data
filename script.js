@@ -314,52 +314,24 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
     let shotnum = shotdf.shape[0];
     let goalnum = goaldf.shape[0];
 
-    let allshotdistances = 0;
-    let allshotdistancesarr = [];
     let shotx = shotdf['shotX'].values;
     let shoty = shotdf['shotY'].values;
 
-        for (let i = 0; i < shotx.length; i++) {
+    let allshotdistances = calcDistances(shotx, shoty);
+    let meanshotdist = (allshotdistances.num / shotx.length);
+    meanshotdist = unitToMeter(meanshotdist);
 
-        if (shotx[i] <= 500) {
-            let distance = Math.sqrt(Math.pow(60 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
-            allshotdistances += distance;
-            allshotdistancesarr.push(distance);
-        } else {
-            let distance = Math.sqrt(Math.pow(940 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
-            allshotdistances += distance;
-            allshotdistancesarr.push(distance);
-        }
-    }
 
-    let meanshotdist = (allshotdistances / shotx.length);
-
-    let allgoaldistances = 0;
-    let allgoaldistancesarr = [];
     let goalx = goaldf['shotX'].values;
     let goaly = goaldf['shotY'].values;
 
-    for (let i = 0; i < goalx.length; i++) {
-
-        if (goalx[i] <= 500) {
-            let distance = Math.sqrt(Math.pow(60 - goalx[i], 2) + Math.pow(250 - goaly[i], 2));
-            allgoaldistances += distance;
-            allgoaldistancesarr.push(distance);
-        } else {
-            let distance = Math.sqrt(Math.pow(940 - goalx[i], 2) + Math.pow(250 - goaly[i], 2));
-            allgoaldistances += distance;
-            allgoaldistancesarr.push(distance);
-        }
-    }
-    let meangoaldist = (allgoaldistances / goalx.length);
-
-
-
-    meanshotdist = unitToMeter(meanshotdist);
+    let allgoaldistances = calcDistances(goalx, goaly);
+    let meangoaldist = (allgoaldistances.num / goalx.length);
     meangoaldist = unitToMeter(meangoaldist);
 
-    let medianshotdist = unitToMeter(calculateMedian(allshotdistancesarr));
-    let mediangoaldist = unitToMeter(calculateMedian(allgoaldistancesarr));
+
+    let medianshotdist = unitToMeter(calculateMedian(allshotdistances.arr));
+    let mediangoaldist = unitToMeter(calculateMedian(allgoaldistances.arr));
 
 
     console.log('mean goal distance ', meangoaldist);
@@ -367,8 +339,6 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
 
     console.log('median shot distance ', medianshotdist);
     console.log('median goal distance ', mediangoaldist);
-
-
 
     console.log('all shots taken ', shotnum);
     console.log('all goals ', goalnum);
@@ -445,6 +415,25 @@ function UpdateInfoText(shotdf, goaldf, playerid) {
 
 
 
+function calcDistances(shotx, shoty) {
+    let alldistancesnum = 0;
+    let alldistancesarr = [];
+
+    for (let i = 0; i < shotx.length; i++) {
+
+        if (shotx[i] <= 500) {
+            let distance = Math.sqrt(Math.pow(60 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
+            alldistancesnum += distance;
+            alldistancesarr.push(distance);
+        } else {
+            let distance = Math.sqrt(Math.pow(940 - shotx[i], 2) + Math.pow(250 - shoty[i], 2));
+            alldistancesnum += distance;
+            alldistancesarr.push(distance);
+        }
+    }
+    return {num: alldistancesnum, arr: alldistancesarr};
+}
+
 async function teamDataupdated() {
     console.log('chosen team id: ', teamdropdown.value);
 
@@ -487,13 +476,11 @@ function mirrorShots(xarr,yarr) {
 
     for (let i = 0; i < yarr.length; i++) {
 
-        yarr[i] = 500 - yarr[i];
-
         if (xarr[i] > 500) {
-            newY.push(500 - yarr[i]);
+            newY.push(yarr[i]);
             newX.push(1000 - xarr[i]);
         } else {
-            newY.push(yarr[i]);
+            newY.push(500 - yarr[i]);
             newX.push(xarr[i]);
         }
     }
